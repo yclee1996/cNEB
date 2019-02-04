@@ -1,0 +1,53 @@
+#!/bin/bash
+#PBS -N g09
+#PBS -q mem64
+#PBS -l nodes=1:ppn=12
+#PBS -j oe
+cd $PBS_O_WORKDIR
+module purge
+module load intel13
+export g09root=/home/software/g09-d01_intel13
+source ${g09root}/g09/bsd/g09.profile
+export GAUSS_SCRDIR=/tmp
+alias g09=${g09root}/g09/g09
+
+/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/first_ok.py
+/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/rm_small_dis_new.py
+
+var_first=`/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/find_first.py`
+
+var_last=`/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/find_last.py`
+
+for i in *.inp
+do
+    g09 $i
+    rm $GAUSS_SCRDIR/Gau* -f
+done
+
+/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/new_decision_ok.py
+/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/print_max_normal_force.py
+/usr/bin/python /lustre/lwork/yclee/python_practice/cneb/print_ave_normal_force.py
+
+while grep -Fxq "True" decision
+do
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/new_total_ok_update_allsp_allc.py
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/rm_small_dis_new1.py 
+
+    for i in *.inp
+    do
+        if [ $i != ${var_first} ] && [ $i != ${var_last} ]
+        then
+            g09 $i
+            rm $GAUSS_SCRDIR/Gau* -f
+        fi
+    done
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/new_decision_ok.py
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/step_limit.py
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/print_max_normal_force.py
+    /usr/bin/python /lustre/lwork/yclee/python_practice/cneb/print_ave_normal_force.py
+
+
+    
+done    
+
+#g09 from_a_gluNAc_TS.com 
