@@ -1,3 +1,3 @@
 # cNEB
 
-Please refer to "cNEB manual"
+Please refer to "Manual of CNEB.pdf"
